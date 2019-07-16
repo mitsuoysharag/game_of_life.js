@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <title>Document</title>
+
+   <style>
+      canvas {
+         background-color: #000;
+      }
+   </style>
+</head>
+
+<body>
+   <h3>Game of Life</h3>
+   <button onclick="Reset()">Reset</button>
+   <hr>
+   <canvas id="canvas" width="1000" height="600">
+   </canvas>
+
+   <script>
+      var n_x_cells = 50
+      var n_y_cells = 30
+
+      var canvas = document.getElementById("canvas")
+      var context = canvas.getContext("2d")
+      var cell_width = canvas.width / n_x_cells
+      var cell_height = canvas.height / n_y_cells
+      var matrix = Array(n_x_cells).fill().map(() => Array(n_y_cells).fill(0));
+      matrix[24][15] = 1
+      matrix[25][14] = 1
+      matrix[25][16] = 1
+      matrix[26][14] = 1
+      matrix[26][16] = 1
+      matrix[27][15] = 1
+
+      function drawCanvas() {
+         context.fillStyle = "#000";
+         context.fillRect(0, 0, canvas.width, canvas.height);
+         //Drawing Grid
+         context.fillStyle = "#fff";
+         for (var x = 0; x <= canvas.width; x += cell_width) {
+            context.fillRect(x, 0, 0.5, canvas.height)
+         }
+         for (var y = 0; y <= canvas.height; y += cell_height) {
+            context.fillRect(0, y, canvas.width, 0.5)
+         }
+         //Drawin Cells
+         context.fillStyle = "#eee";
+         for (let x = 0; x < n_x_cells; x++) {
+            for (let y = 0; y < n_y_cells; y++) {
+               if (matrix[x][y] == 1) {
+                  x_fill_pos = x * cell_width
+                  y_fill_pos = y * cell_height
+                  context.fillRect(x_fill_pos, y_fill_pos, cell_width, cell_height)
+               }
+            }
+         }
+      }
+      canvas.addEventListener("click", function (evt) {
+         var rect = canvas.getBoundingClientRect()
+         var mousePosX = evt.clientX - rect.left
+         var mousePosY = evt.clientY - rect.top
+         x_pos = Math.floor(mousePosX / cell_width)
+         y_pos = Math.floor(mousePosY / cell_height)
+         cellReplace(x_pos, y_pos)
+      });
+
+      function cellReplace(x, y) {
+         matrix[x][y] = matrix[x][y] == 0 ? 1 : 0
+         drawCanvas()
+      }
+      function cellCreationCheck(x, y) {
+         if (matrix[x][y] != 0) return false
+         n_cells_around_to_create_min = 3
+         n_cells_around_to_create_max = 3
+         x_ini = x - 1
+         y_ini = y - 1
+         cont = 0
+         for (let i = x_ini; i < x_ini + 3; i++) {
+            for (let j = y_ini; j < y_ini + 3; j++) {
+               if ((i != x || j != y) && i >= 0 && j >= 0 && i < matrix.length && j < matrix[0].length) {
+                  if (matrix[i][j] != 0) {
+                     cont++
+                  }
+               }
+            }
+         }
+         return cont >= n_cells_around_to_create_min && cont <= n_cells_around_to_create_max
+      }
+      function cellCreation(x, y) {
+         matrix[x][y] = 1
+      }
+      function cellEliminationCheck(x, y) {
+         if (matrix[x][y] == 0) return false
+         n_cells_around_to_eliminate_min = 1
+         n_cells_around_to_eliminate_max = 4
+         x_ini = x - 1
+         y_ini = y - 1
+         cont = 0
+         for (let i = x_ini; i < x_ini + 3; i++) {
+            for (let j = y_ini; j < y_ini + 3; j++) {
+               if ((i != x || j != y) && i >= 0 && j >= 0 && i < matrix.length && j < matrix[0].length) {
+                  if (matrix[i][j] != 0) {
+                     cont++
+                  }
+               }
+            }
+         }
+         return cont <= n_cells_around_to_eliminate_min || cont >= n_cells_around_to_eliminate_max
+      }
+      function cellElimination(x, y) {
+         matrix[x][y] = 0
+      }
+
+      function nextEpoch() {
+         //Pre Creation
+         new_cells_creation_pos = []
+         for (let i = 0; i < matrix.length; i++) {
+            for (let j = 0; j < matrix[0].length; j++) {
+               if (cellCreationCheck(i, j)) {
+                  new_cells_creation_pos.push({ x: i, y: j })
+               }
+            }
+         }
+         //Pre Elimination
+         new_cells_elimination_pos = []
+         for (let i = 0; i < matrix.length; i++) {
+            for (let j = 0; j < matrix[0].length; j++) {
+               if (cellEliminationCheck(i, j)) {
+                  new_cells_elimination_pos.push({ x: i, y: j })
+               }
+            }
+         }
+
+         //Post Creation
+         new_cells_creation_pos.forEach(element => {
+            cellCreation(element.x, element.y)
+         });
+         //Post Elimination
+         new_cells_elimination_pos.forEach(element => {
+            cellElimination(element.x, element.y)
+         });
+
+         //Drawing
+         drawCanvas()
+      }
+      drawCanvas()
+      setInterval(function () { nextEpoch() }, 100);
+
+      //AUXILIAR
+      function Reset() {
+         matrix = Array(n_x_cells).fill().map(() => Array(n_y_cells).fill(0));
+         matrix[24][15] = 1
+         matrix[25][14] = 1
+         matrix[25][16] = 1
+         matrix[26][14] = 1
+         matrix[26][16] = 1
+         matrix[27][15] = 1
+      }
+   </script>
+</body>
+
+</html>
